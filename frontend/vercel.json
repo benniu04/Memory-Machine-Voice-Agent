@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "voice-agent/package.json",
+      "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
@@ -15,7 +15,7 @@
       "dest": "voice-agent/$1"
     }
   ],
-  "buildCommand": "cd voice-agent && npm install && npm run build",
-  "outputDirectory": "voice-agent/build"
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/build"
 }
 
