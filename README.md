@@ -2,6 +2,8 @@
 
 A full-stack web application that performs real-time audio transcription and visualizes the speaker's emotional sentiment through a beautiful, dynamic Perlin noise field.
 
+Try it out here: https://voice-agent-ruddy.vercel.app/
+
 ## 🎨 Features
 
 - **Real-time Audio Transcription**: Uses Deepgram API for high-accuracy speech-to-text
