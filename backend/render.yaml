@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sentiment-voice-agent-backend
+    runtime: python
+    plan: free  # or 'starter' for $7/month always-on
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: OPENAI_API_KEY
+        sync: false  # Secret - set manually in Render dashboard
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:3000  # Update after deploying frontend
+
