@@ -46,15 +46,11 @@ const TranscriptDisplay = ({ transcript, isRecording }) => {
   }, [transcript]);
 
   return (
-    <div className="fixed top-5 left-5 w-[420px] max-h-[65vh] bg-gradient-to-br from-black/80 via-black/70 to-black/80 backdrop-blur-[20px] rounded-3xl border border-white/20 p-6 text-white font-sans shadow-[0_20px_60px_rgba(0,0,0,0.5)] z-10 flex flex-col max-md:w-[calc(100%-40px)] max-md:max-h-[40vh] relative overflow-hidden">
-      {/* Animated background gradient */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-indigo-500/20 animate-pulse-slow"></div>
-      </div>
+    <div className="fixed top-5 left-5 w-[420px] max-h-[65vh] rounded-3xl border border-white/40 p-6 text-white font-sans shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] z-10 flex flex-col max-md:w-[calc(100%-40px)] max-md:max-h-[40vh] overflow-hidden animate-slide-in-left" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
       
       <div className="relative z-10 flex flex-col h-full">
-        <div className="flex justify-between items-center mb-5 pb-4 border-b border-white/20">
-          <h3 className="m-0 text-xl font-bold bg-gradient-to-r from-[#667eea] via-[#764ba2] to-[#f093fb] bg-clip-text text-transparent animate-pulse-glow">
+        <div className="flex justify-between items-center mb-5 pb-4 border-b border-white/30">
+          <h3 className="m-0 text-xl font-bold bg-gradient-to-r from-[#667eea] via-[#764ba2] to-[#f093fb] bg-clip-text text-transparent animate-pulse-glow" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))' }}>
             Live Transcript
           </h3>
           {isRecording && (
@@ -93,7 +89,7 @@ const TranscriptDisplay = ({ transcript, isRecording }) => {
                 className="mb-4 pb-4 border-b border-white/5 last:border-0 animate-fade-in-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <p className="m-0 leading-relaxed text-[15px] text-white/95 font-medium">
+                <p className="m-0 leading-relaxed text-[15px] text-white font-medium" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 2px rgba(0, 0, 0, 0.6)' }}>
                   {line}
                   {index === displayedLines.length - 1 && isRecording && (
                     <span className="inline-block w-2 h-4 ml-1 bg-white/80 animate-pulse"></span>

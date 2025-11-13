@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import PerlinVisualization from './components/PerlinVisualization';
 import TranscriptDisplay from './components/TranscriptDisplay';
 import KeywordsDisplay from './components/KeywordsDisplay';
@@ -13,6 +13,10 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Intro animation state
+  const [showIntro, setShowIntro] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   
   // Sentiment state
   const [sentiment, setSentiment] = useState(0);
@@ -31,6 +35,9 @@ function App() {
 
   // Initialize Deepgram hook
   const { startRecording, stopRecording, isConnected, error: deepgramError } = useDeepgram(DEEPGRAM_API_KEY);
+
+  // Intro will only hide when user clicks "Start Recording"
+  // (handled in handleStart function)
 
   // Handle transcript updates from Deepgram
   const handleTranscript = useCallback(async (data) => {
@@ -99,6 +106,12 @@ function App() {
     }
 
     try {
+      // Hide intro on first interaction
+      if (!hasInteracted) {
+        setShowIntro(false);
+        setHasInteracted(true);
+      }
+
       setError(null);
       setTranscript([]);
       currentTranscriptRef.current = ''; // Reset transcript ref
@@ -121,7 +134,7 @@ function App() {
       setError(err.message || 'Failed to start recording');
       setIsRecording(false);
     }
-  }, [DEEPGRAM_API_KEY, startRecording, handleTranscript]);
+  }, [DEEPGRAM_API_KEY, startRecording, handleTranscript, hasInteracted]);
 
   // Stop recording handler
   const handleStop = useCallback(async () => {
@@ -183,7 +196,7 @@ function App() {
   return (
     <div className="App">
       {/* Background Perlin Noise Visualization */}
-      <div className="visualization-container">
+      <div className={`visualization-container ${showIntro ? 'opacity-0 animate-fade-in-scale' : ''}`}>
         <PerlinVisualization
           sentiment={sentiment}
           sentimentLabel={sentimentLabel}
@@ -191,6 +204,50 @@ function App() {
           energyLevel={energyLevel}
         />
       </div>
+
+      {/* Intro Animation Overlay */}
+      {showIntro && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in">
+          <div className="text-center">
+            {/* Main title */}
+            <h1 
+              className="text-6xl font-bold text-white mb-4 overflow-hidden whitespace-nowrap border-r-4 border-white/80 m-auto inline-block"
+              style={{ 
+                width: 'fit-content', 
+                animation: 'typewriter 2s steps(16) 0.5s forwards, blink 1s step-end 2.5s 2'
+              }}
+            >
+              Ready to Listen
+            </h1>
+            
+            {/* Subtitle */}
+            <p 
+              className="text-white/60 text-xl mt-6 mb-12 animate-fade-in"
+              style={{ 
+                animationDelay: '2.8s', 
+                opacity: 0, 
+                animationFillMode: 'forwards'
+              }}
+            >
+              Click start when you're ready
+            </p>
+            
+            {/* Button */}
+            <button
+              onClick={handleStart}
+              className="px-10 py-5 text-lg font-bold rounded-[60px] cursor-pointer transition-all duration-300 bg-gradient-to-r from-[#667eea] via-[#764ba2] to-[#667eea] text-white hover:scale-110 hover:shadow-[0_12px_40px_rgba(102,126,234,0.6)] animate-fade-in border-0"
+              style={{ 
+                animationDelay: '3s', 
+                opacity: 0, 
+                animationFillMode: 'forwards', 
+                backgroundSize: '200% 100%' 
+              }}
+            >
+              Start Recording
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* UI Overlays */}
       <TranscriptDisplay transcript={transcript} isRecording={isRecording} />
@@ -207,7 +264,7 @@ function App() {
 
       {/* Status indicator */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-5 left-5 bg-black/70 backdrop-blur-[10px] rounded-2xl border border-white/10 px-5 py-3 text-white font-sans shadow-[0_8px_32px_rgba(0,0,0,0.4)] z-10 max-md:bottom-[180px]">
+        <div className="fixed bottom-5 left-5 rounded-2xl border border-white/40 px-5 py-3 text-white font-sans shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] z-10 max-md:bottom-[180px]" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
           <div className="flex items-center gap-4 text-xs font-medium">
             <div className="flex items-center gap-2">
               <span className="text-white/50">Connection</span>

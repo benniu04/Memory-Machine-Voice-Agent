@@ -124,7 +124,7 @@ const Controls = ({ isRecording, onStart, onStop, isProcessing, error }) => {
       </div>
 
       {isProcessing && (
-        <div className="flex items-center gap-4 px-8 py-4 bg-gradient-to-r from-black/80 to-black/70 backdrop-blur-[15px] rounded-3xl text-white text-sm font-semibold border border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <div className="flex items-center gap-4 px-8 py-4 rounded-3xl text-white text-sm font-semibold border border-white/40 shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
           <div className="relative w-5 h-5">
             <div className="absolute inset-0 border-3 border-white/20 border-t-white rounded-full animate-spin"></div>
           </div>
@@ -134,7 +134,7 @@ const Controls = ({ isRecording, onStart, onStop, isProcessing, error }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-3 px-6 py-2.5 bg-gradient-to-r from-black/80 to-black/70 backdrop-blur-[15px] rounded-[25px] border border-white/20 text-white text-[13px] font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
+      <div className="flex items-center gap-3 px-6 py-2.5 rounded-[25px] border border-white/40 text-white text-[13px] font-semibold shadow-[0_20px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)]" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
         <div className="relative">
           <div className={`w-3 h-3 rounded-full transition-all duration-500 ${isRecording ? 'bg-[#10b981] shadow-[0_0_20px_rgba(16,185,129,1)] scale-110' : 'bg-white/40 scale-100'}`}></div>
           {isRecording && (
