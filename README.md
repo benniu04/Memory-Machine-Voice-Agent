@@ -61,7 +61,7 @@ The backend will be available at `http://localhost:8000`
 ### 2. Frontend Setup
 
 ```bash
-cd voice-agent
+cd frontend
 
 # Install dependencies
 npm install
@@ -163,16 +163,7 @@ Adjust parameters in `PerlinVisualization.js`:
 **No visualization:**
 - Open browser console for errors
 - Ensure `react-p5` and `p5` are installed
-
-## 🎯 Assessment Criteria
-
-This project demonstrates:
-
-✅ **Full-Stack Orchestration**: Frontend, backend, and two external APIs working in harmony  
-✅ **Data-Driven Visualization**: Sentiment mapped to color, motion, and intensity  
-✅ **Frontend Polish**: Smooth transitions, fade-in animations, glassmorphism  
-✅ **Async Management**: Debouncing, error handling, loading states  
-✅ **Real-time Performance**: WebSocket streaming, responsive updates  
+ 
 
 ## 📚 Technologies Used
 
@@ -181,19 +172,10 @@ This project demonstrates:
 - **APIs**: Deepgram (transcription), OpenAI GPT-4 / Claude (sentiment)
 - **Styling**: CSS3 with glassmorphism, animations, gradients
 
-## 🌟 Future Enhancements
-
-- [ ] Multi-language support
-- [ ] Export transcript and sentiment timeline
-- [ ] 3D visualization with Three.js
-- [ ] Voice emotion training mode
-- [ ] Real-time sentiment graph overlay
-- [ ] Multiple speaker detection
-
 ## 📄 License
 
 This project is built as a technical demonstration for Memory Machines.
 
 ---
 
-**Built with ❤️ for Memory Machines - Going Beyond LLMs**
+**Made with ❤️ for Memory Machines - Going Beyond LLMs**
