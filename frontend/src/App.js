@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import PerlinVisualization from './components/PerlinVisualization';
 import TranscriptDisplay from './components/TranscriptDisplay';
 import KeywordsDisplay from './components/KeywordsDisplay';
@@ -17,6 +17,7 @@ function App() {
   // Intro animation state
   const [showIntro, setShowIntro] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [typewriterKey, setTypewriterKey] = useState(0);
   
   // Sentiment state
   const [sentiment, setSentiment] = useState(0);
@@ -36,8 +37,16 @@ function App() {
   // Initialize Deepgram hook
   const { startRecording, stopRecording, isConnected, error: deepgramError } = useDeepgram(DEEPGRAM_API_KEY);
 
-  // Intro will only hide when user clicks "Start Recording"
-  // (handled in handleStart function)
+  // Loop typewriter animation every 3 seconds on intro screen
+  useEffect(() => {
+    if (showIntro) {
+      const interval = setInterval(() => {
+        setTypewriterKey(prev => prev + 1);
+      }, 5000); // Reset every 3 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [showIntro]);
 
   // Handle transcript updates from Deepgram
   const handleTranscript = useCallback(async (data) => {
@@ -207,44 +216,68 @@ function App() {
 
       {/* Intro Animation Overlay */}
       {showIntro && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in">
-          <div className="text-center">
-            {/* Main title */}
-            <h1 
-              className="text-6xl font-bold text-white mb-4 overflow-hidden whitespace-nowrap border-r-4 border-white/80 m-auto inline-block"
-              style={{ 
-                width: 'fit-content', 
-                animation: 'typewriter 2s steps(16) 0.5s forwards, blink 1s step-end 2.5s 2'
-              }}
-            >
-              Ready to Listen
-            </h1>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in overflow-hidden">
+          {/* Subtle animated background particles */}
+          <div className="absolute inset-0 opacity-80">
+            <div className="absolute top-[20%] left-[10%] w-32 h-32 bg-purple-500/40 rounded-full blur-[80px] animate-pulse-slow"></div>
+            <div className="absolute bottom-[30%] right-[15%] w-40 h-40 bg-blue-500/40 rounded-full blur-[80px] animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-[60%] left-[20%] w-24 h-24 bg-indigo-500/40 rounded-full blur-[80px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute bottom-[20%] left-[50%] w-36 h-36 bg-pink-500/30 rounded-full blur-[80px] animate-pulse-slow" style={{ animationDelay: '1.5s' }}></div>
+          </div>
+
+          <div className="text-center relative z-10">
+            {/* Main title - resets with key change */}
+            <div className="relative inline-block mb-4">
+              <h1 
+                key={typewriterKey}
+                className="text-6xl font-black overflow-hidden whitespace-nowrap inline-block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                style={{ 
+                  width: 'fit-content', 
+                  animation: 'typewriter 2s steps(16) forwards',
+                  filter: 'drop-shadow(0 0 20px rgba(147, 197, 253, 0.3))'
+                }}
+              >
+                Ready to Listen
+                <span 
+                  className="inline-block w-1 h-16 ml-1 align-middle bg-gradient-to-b from-blue-400 via-purple-400 to-pink-400"
+                  style={{
+                    animation: 'blink 1s step-end infinite',
+                    filter: 'drop-shadow(0 0 8px rgba(147, 197, 253, 0.6))',
+                    verticalAlign: 'baseline'
+                  }}
+                />
+              </h1>
+            </div>
             
-            {/* Subtitle */}
+            {/* Subtitle with gradient and animation */}
             <p 
-              className="text-white/60 text-xl mt-6 mb-12 animate-fade-in"
+              className="text-xl mt-8 mb-12 font-light tracking-wide bg-gradient-to-r from-blue-200/80 via-purple-200/80 to-pink-200/80 bg-clip-text text-transparent"
               style={{ 
-                animationDelay: '2.8s', 
-                opacity: 0, 
-                animationFillMode: 'forwards'
+                animation: 'fade-in 1s ease-in forwards',
+                filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
               }}
             >
               Click start when you're ready
             </p>
             
-            {/* Button */}
-            <button
-              onClick={handleStart}
-              className="px-10 py-5 text-lg font-bold rounded-[60px] cursor-pointer transition-all duration-300 bg-gradient-to-r from-[#667eea] via-[#764ba2] to-[#667eea] text-white hover:scale-110 hover:shadow-[0_12px_40px_rgba(102,126,234,0.6)] animate-fade-in border-0"
-              style={{ 
-                animationDelay: '3s', 
-                opacity: 0, 
-                animationFillMode: 'forwards', 
-                backgroundSize: '200% 100%' 
-              }}
-            >
-              Start Recording
-            </button>
+            {/* Button with pulse effect */}
+            <div className="relative inline-block">
+              {/* Pulsing glow with matching gradient */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-pink-500/40 rounded-[60px] blur-lg animate-pulse-slow"></div>
+              
+              <button
+                onClick={handleStart}
+                className="relative px-12 py-5 text-lg font-bold rounded-[60px] cursor-pointer transition-all duration-300 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white hover:scale-110 hover:shadow-[0_16px_48px_rgba(147,197,253,0.4)] border-0 overflow-hidden group"
+                style={{ 
+                  backgroundSize: '200% 100%',
+                  filter: 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.3))'
+                }}
+              >
+                {/* Shimmer on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <span className="relative z-10 tracking-wide">Start Recording</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

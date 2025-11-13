@@ -54,5 +54,5 @@ coverage/
 # Misc
 .cache/
 
-.md
+*.md
 

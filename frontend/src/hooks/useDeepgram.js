@@ -64,7 +64,6 @@ const useDeepgram = (apiKey) => {
       connectionRef.current = connection;
 
       // Set up event listeners BEFORE opening connection
-      // Listen for Results events (Deepgram SDK v3 uses 'Results' not 'transcript')
       connection.on('Results', (data) => {
         const transcript = data.channel?.alternatives?.[0]?.transcript;
         
