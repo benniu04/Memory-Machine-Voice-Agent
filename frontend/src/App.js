@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import PerlinVisualization from './components/PerlinVisualization';
 import TranscriptDisplay from './components/TranscriptDisplay';
 import KeywordsDisplay from './components/KeywordsDisplay';
