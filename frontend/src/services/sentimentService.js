@@ -27,18 +27,3 @@ export const processSentiment = async (text) => {
   }
 };
 
-export const processSentimentClaude = async (text) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/process_text_claude`, {
-      text: text,
-    }, {
-      timeout: 10000,
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error('Error processing sentiment with Claude:', error);
-    throw new Error(error.response?.data?.detail || 'Failed to process sentiment');
-  }
-};
-
