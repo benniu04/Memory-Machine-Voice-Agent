@@ -228,10 +228,10 @@ function App() {
 
           <div className="text-center relative z-10">
             {/* Main title - resets with key change */}
-            <div className="relative inline-block mb-4">
+            <div className="relative inline-block mb-4 px-4">
               <h1 
                 key={typewriterKey}
-                className="text-6xl font-black overflow-hidden whitespace-nowrap inline-block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+                className="text-6xl max-sm:text-4xl font-black overflow-hidden whitespace-nowrap inline-block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent max-sm:whitespace-normal max-sm:break-words sm:whitespace-nowrap"
                 style={{ 
                   width: 'fit-content', 
                   animation: 'typewriter 2s steps(16) forwards',
@@ -240,7 +240,7 @@ function App() {
               >
                 Ready to Listen
                 <span 
-                  className="inline-block w-1 h-16 ml-1 align-middle bg-gradient-to-b from-blue-400 via-purple-400 to-pink-400"
+                  className="inline-block w-1 h-16 max-sm:h-12 ml-1 align-middle bg-gradient-to-b from-blue-400 via-purple-400 to-pink-400"
                   style={{
                     animation: 'blink 1s step-end infinite',
                     filter: 'drop-shadow(0 0 8px rgba(147, 197, 253, 0.6))',
