@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { createClient } from '@deepgram/sdk';
+import { useTranscriptionStore } from '../stores';
 
 const useDeepgram = (apiKey) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState(null);
+  const { setConnected, setError } = useTranscriptionStore();
   
   const deepgramRef = useRef(null);
   const connectionRef = useRef(null);
@@ -14,8 +14,16 @@ const useDeepgram = (apiKey) => {
     try {
       setError(null);
 
-      // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone access with better audio constraints
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1
+        } 
+      });
       streamRef.current = stream;
       
       // Verify stream is active
@@ -51,9 +59,11 @@ const useDeepgram = (apiKey) => {
           smart_format: true,
           interim_results: true,
           punctuate: true,
-          utterance_end_ms: 1000,
-          endpointing: 300,
+          utterance_end_ms: 1500,
+          endpointing: 500,
           multichannel: false,
+          vad_events: true,
+          filler_words: false,
         });
       } catch (err) {
         console.error('Error creating Deepgram connection:', err);
@@ -68,11 +78,15 @@ const useDeepgram = (apiKey) => {
         const transcript = data.channel?.alternatives?.[0]?.transcript;
         
         if (transcript && transcript.trim().length > 0) {
-          onTranscript({
-            text: transcript,
-            isFinal: data.is_final,
-            speech_final: data.speech_final,
-          });
+          // Call the callback with all the data
+          // The callback will handle adding to store (only for final transcripts)
+          if (onTranscript) {
+            onTranscript({
+              text: transcript,
+              isFinal: data.is_final,
+              speech_final: data.speech_final,
+            });
+          }
         }
       });
       
@@ -80,16 +94,18 @@ const useDeepgram = (apiKey) => {
       connection.on('transcript', (data) => {
         const transcript = data.channel?.alternatives?.[0]?.transcript;
         if (transcript && transcript.trim().length > 0) {
-          onTranscript({
-            text: transcript,
-            isFinal: data.is_final,
-            speech_final: data.speech_final,
-          });
+          if (onTranscript) {
+            onTranscript({
+              text: transcript,
+              isFinal: data.is_final,
+              speech_final: data.speech_final,
+            });
+          }
         }
       });
 
       connection.on('open', () => {
-        setIsConnected(true);
+        setConnected(true);
 
         // Create MediaRecorder to capture audio
         let mimeType = 'audio/webm';
@@ -123,9 +139,9 @@ const useDeepgram = (apiKey) => {
           console.error('MediaRecorder error:', event);
         };
 
-        // Start recording with timeslice (sends data every 250ms)
+        // Start recording with timeslice (sends data every 100ms for better responsiveness)
         try {
-          mediaRecorder.start(250);
+          mediaRecorder.start(100);
         } catch (err) {
           console.error('Error starting MediaRecorder:', err);
           setError('Failed to start audio recording');
@@ -143,15 +159,15 @@ const useDeepgram = (apiKey) => {
             setError('Deepgram API key may be invalid or expired');
           }
         }
-        setIsConnected(false);
+        setConnected(false);
       });
 
     } catch (err) {
       console.error('Error starting recording:', err);
       setError(err.message || 'Failed to start recording');
-      setIsConnected(false);
+      setConnected(false);
     }
-  }, [apiKey]);
+  }, [apiKey, setError, setConnected]);
 
   const stopRecording = useCallback(() => {
     try {
@@ -183,20 +199,18 @@ const useDeepgram = (apiKey) => {
           connectionRef.current = null;
         }
 
-        setIsConnected(false);
+        setConnected(false);
       }, 500); // Wait 500ms for final transcripts
       
     } catch (err) {
       console.error('Error stopping recording:', err);
       setError('Failed to stop recording properly');
     }
-  }, []);
+  }, [setConnected, setError]);
 
   return {
     startRecording,
     stopRecording,
-    isConnected,
-    error,
   };
 };
 

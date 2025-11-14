@@ -1,30 +1,42 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import PerlinVisualization from './components/PerlinVisualization';
 import TranscriptDisplay from './components/TranscriptDisplay';
 import KeywordsDisplay from './components/KeywordsDisplay';
 import Controls from './components/Controls';
 import useDeepgram from './hooks/useDeepgram';
 import { processSentiment } from './services/sentimentService';
+import { useTranscriptionStore, useVisualizationStore, useUIStore } from './stores';
 import './App.css';
 
 function App() {
-  // State management
-  const [transcript, setTranscript] = useState([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
+  // Zustand stores
+  const { 
+    isConnected,
+    setRecording,
+    addTranscript,
+    clearTranscript 
+  } = useTranscriptionStore();
   
-  // Intro animation state
-  const [showIntro, setShowIntro] = useState(true);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [typewriterKey, setTypewriterKey] = useState(0);
+  const {
+    sentiment,
+    emotionIntensity,
+    energyLevel,
+    updateVisualization,
+    setKeywords: setStoreKeywords,
+    clearKeywords
+  } = useVisualizationStore();
   
-  // Sentiment state
-  const [sentiment, setSentiment] = useState(0);
-  const [sentimentLabel, setSentimentLabel] = useState('neutral');
-  const [keywords, setKeywords] = useState([]);
-  const [emotionIntensity, setEmotionIntensity] = useState(0.5);
-  const [energyLevel, setEnergyLevel] = useState(0.5);
+  const {
+    showIntro,
+    hasInteracted,
+    typewriterKey,
+    hideIntro,
+    setProcessing,
+    resetTypewriter
+  } = useUIStore();
+  
+  // Local state for sentiment label (not needed in visualization)
+  const [sentimentLabel, setSentimentLabel] = React.useState('neutral');
 
   // Refs for managing transcript
   const currentTranscriptRef = useRef('');
@@ -34,31 +46,30 @@ function App() {
   // Get Deepgram API key from environment variable
   const DEEPGRAM_API_KEY = process.env.REACT_APP_DEEPGRAM_API_KEY;
 
-  // Initialize Deepgram hook
-  const { startRecording, stopRecording, isConnected, error: deepgramError } = useDeepgram(DEEPGRAM_API_KEY);
+  // Initialize Deepgram hook (now only returns start/stop functions)
+  const { startRecording, stopRecording } = useDeepgram(DEEPGRAM_API_KEY);
 
-  // Loop typewriter animation every 3 seconds on intro screen
+  // Loop typewriter animation every 5 seconds on intro screen
   useEffect(() => {
     if (showIntro) {
       const interval = setInterval(() => {
-        setTypewriterKey(prev => prev + 1);
-      }, 5000); // Reset every 3 seconds
+        resetTypewriter();
+      }, 5000);
       
       return () => clearInterval(interval);
     }
-  }, [showIntro]);
+  }, [showIntro, resetTypewriter]);
 
   // Handle transcript updates from Deepgram
   const handleTranscript = useCallback(async (data) => {
     const { text, isFinal, speech_final } = data;
 
     if (isFinal) {
-      // Add finalized transcript to display
-      setTranscript(prev => {
-        const updated = [...prev, text];
-        transcriptArrayRef.current = updated; // Keep ref in sync
-        return updated;
-      });
+      // Add finalized transcript to store
+      addTranscript(text);
+      
+      // Update ref for processing
+      transcriptArrayRef.current = [...transcriptArrayRef.current, text];
       
       // Update current transcript (accumulate if multiple final transcripts)
       if (currentTranscriptRef.current) {
@@ -82,54 +93,50 @@ function App() {
           }
           
           try {
-            setIsProcessing(true);
-            setError(null);
+            setProcessing(true);
 
             const sentimentData = await processSentiment(textToProcess);
             
-            // Update visualization state
-            setSentiment(sentimentData.sentiment);
+            // Update visualization store
+            updateVisualization(
+              sentimentData.energy_level,
+              sentimentData.emotion_intensity,
+              sentimentData.sentiment
+            );
             setSentimentLabel(sentimentData.sentiment_label);
-            setKeywords(sentimentData.keywords);
-            setEmotionIntensity(sentimentData.emotion_intensity);
-            setEnergyLevel(sentimentData.energy_level);
+            setStoreKeywords(sentimentData.keywords);
             
             // Clear the processed transcript
             currentTranscriptRef.current = '';
           } catch (err) {
             console.error('Error processing sentiment:', err);
-            setError(err.message);
           } finally {
-            setIsProcessing(false);
+            setProcessing(false);
           }
         }, 500); // Wait 500ms after speech ends
       }
     }
-  }, []);
+  }, [addTranscript, setProcessing, updateVisualization, setStoreKeywords]);
 
   // Start recording handler
   const handleStart = useCallback(async () => {
     if (!DEEPGRAM_API_KEY) {
-      setError('Deepgram API key not found. Please set DEEPGRAM_API_KEY in your .env file.');
       return;
     }
 
     try {
       // Hide intro on first interaction
       if (!hasInteracted) {
-        setShowIntro(false);
-        setHasInteracted(true);
+        hideIntro();
       }
 
-      setError(null);
-      setTranscript([]);
-      currentTranscriptRef.current = ''; // Reset transcript ref
-      transcriptArrayRef.current = []; // Reset transcript array ref
-      setSentiment(0);
+      // Reset all stores
+      clearTranscript();
+      clearKeywords();
+      currentTranscriptRef.current = '';
+      transcriptArrayRef.current = [];
+      updateVisualization(0.5, 0.5, 0);
       setSentimentLabel('neutral');
-      setKeywords([]);
-      setEmotionIntensity(0.5);
-      setEnergyLevel(0.5);
       
       // Clear any pending processing
       if (processingTimeoutRef.current) {
@@ -138,17 +145,17 @@ function App() {
       }
       
       await startRecording(handleTranscript);
-      setIsRecording(true);
+      setRecording(true);
     } catch (err) {
-      setError(err.message || 'Failed to start recording');
-      setIsRecording(false);
+      console.error('Failed to start recording:', err);
+      setRecording(false);
     }
-  }, [DEEPGRAM_API_KEY, startRecording, handleTranscript, hasInteracted]);
+  }, [DEEPGRAM_API_KEY, startRecording, handleTranscript, hasInteracted, hideIntro, clearTranscript, clearKeywords, updateVisualization, setRecording]);
 
   // Stop recording handler
   const handleStop = useCallback(async () => {
     stopRecording();
-    setIsRecording(false);
+    setRecording(false);
     
     // Wait a moment for any final transcripts to arrive
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -170,25 +177,25 @@ function App() {
       }
       
       try {
-        setIsProcessing(true);
-        setError(null);
+        setProcessing(true);
 
         const sentimentData = await processSentiment(textToProcess);
         
-        // Update visualization state
-        setSentiment(sentimentData.sentiment);
+        // Update visualization store
+        updateVisualization(
+          sentimentData.energy_level,
+          sentimentData.emotion_intensity,
+          sentimentData.sentiment
+        );
         setSentimentLabel(sentimentData.sentiment_label);
-        setKeywords(sentimentData.keywords);
-        setEmotionIntensity(sentimentData.emotion_intensity);
-        setEnergyLevel(sentimentData.energy_level);
+        setStoreKeywords(sentimentData.keywords);
         
         // Clear the processed transcript
         currentTranscriptRef.current = '';
       } catch (err) {
         console.error('Error processing sentiment:', err);
-        setError(err.message);
       } finally {
-        setIsProcessing(false);
+        setProcessing(false);
       }
     } else {
       // Clear any pending processing if no transcript
@@ -197,21 +204,13 @@ function App() {
         processingTimeoutRef.current = null;
       }
     }
-  }, [stopRecording]);
-
-  // Display combined error from Deepgram or processing
-  const displayError = error || deepgramError;
+  }, [stopRecording, setRecording, setProcessing, updateVisualization, setStoreKeywords]);
 
   return (
     <div className="App">
       {/* Background Perlin Noise Visualization */}
       <div className={`visualization-container ${showIntro ? 'opacity-0 animate-fade-in-scale' : ''}`}>
-        <PerlinVisualization
-          sentiment={sentiment}
-          sentimentLabel={sentimentLabel}
-          emotionIntensity={emotionIntensity}
-          energyLevel={energyLevel}
-        />
+        <PerlinVisualization />
       </div>
 
       {/* Intro Animation Overlay */}
@@ -283,16 +282,13 @@ function App() {
       )}
 
       {/* UI Overlays */}
-      <TranscriptDisplay transcript={transcript} isRecording={isRecording} />
-      <KeywordsDisplay keywords={keywords} sentimentLabel={sentimentLabel} />
+      <TranscriptDisplay />
+      <KeywordsDisplay sentimentLabel={sentimentLabel} />
       
       {/* Controls */}
       <Controls
-        isRecording={isRecording}
         onStart={handleStart}
         onStop={handleStop}
-        isProcessing={isProcessing}
-        error={displayError}
       />
 
       {/* Status indicator */}
@@ -306,17 +302,17 @@ function App() {
             <div className="w-px h-4 bg-white/10"></div>
             <div className="flex items-center gap-2">
               <span className="text-white/50">Sentiment</span>
-              <span className="font-mono text-white/90">{sentiment.toFixed(2)}</span>
+              <span className="font-mono text-white/90">{(sentiment ?? 0).toFixed(2)}</span>
             </div>
             <div className="w-px h-4 bg-white/10"></div>
             <div className="flex items-center gap-2">
               <span className="text-white/50">Energy</span>
-              <span className="font-mono text-white/90">{energyLevel.toFixed(2)}</span>
+              <span className="font-mono text-white/90">{(energyLevel ?? 0.5).toFixed(2)}</span>
             </div>
             <div className="w-px h-4 bg-white/10"></div>
             <div className="flex items-center gap-2">
               <span className="text-white/50">Intensity</span>
-              <span className="font-mono text-white/90">{emotionIntensity.toFixed(2)}</span>
+              <span className="font-mono text-white/90">{(emotionIntensity ?? 0.5).toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
+import { useTranscriptionStore, useUIStore } from '../stores';
 
-const Controls = ({ isRecording, onStart, onStop, isProcessing, error }) => {
+const Controls = ({ onStart, onStop }) => {
+  // Read from Zustand stores
+  const { isRecording, error: transcriptionError } = useTranscriptionStore();
+  const { isProcessing } = useUIStore();
   const [ripples, setRipples] = useState([]);
   const buttonRef = useRef(null);
 
@@ -36,10 +40,10 @@ const Controls = ({ isRecording, onStart, onStop, isProcessing, error }) => {
 
   return (
     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-5 z-20 max-md:bottom-5">
-      {error && (
+      {transcriptionError && (
         <div className="bg-gradient-to-r from-red-500/95 to-red-600/95 backdrop-blur-[15px] text-white px-7 py-3.5 rounded-2xl flex items-center gap-3 text-sm font-semibold shadow-[0_8px_24px_rgba(239,68,68,0.5)] animate-slide-up border border-red-400/30">
           <span className="text-xl animate-pulse">⚠️</span>
-          <span>{error}</span>
+          <span>{transcriptionError}</span>
         </div>
       )}
       

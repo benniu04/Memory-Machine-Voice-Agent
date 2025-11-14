@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useVisualizationStore } from '../stores';
 
-const KeywordsDisplay = ({ keywords, sentimentLabel }) => {
+const KeywordsDisplay = ({ sentimentLabel }) => {
+  // Read keywords from Zustand store
+  const { keywords } = useVisualizationStore();
   const [displayedKeywords, setDisplayedKeywords] = useState([]);
   const keywordIdsRef = useRef(0);
 

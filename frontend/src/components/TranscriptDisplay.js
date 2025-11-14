@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranscriptionStore } from '../stores';
 
-const TranscriptDisplay = ({ transcript, isRecording }) => {
+const TranscriptDisplay = () => {
+  // Read directly from Zustand store
+  const { transcript, isRecording } = useTranscriptionStore();
   const scrollRef = useRef(null);
   const [displayedLines, setDisplayedLines] = useState([]);
   const previousTranscriptRef = useRef([]);

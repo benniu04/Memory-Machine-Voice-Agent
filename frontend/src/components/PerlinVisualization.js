@@ -1,7 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import Sketch from 'react-p5';
+import { useVisualizationStore } from '../stores';
 
-const PerlinVisualization = ({ sentiment = 0, sentimentLabel = 'neutral', emotionIntensity = 0.5, energyLevel = 0.5 }) => {
+const PerlinVisualization = () => {
+  // Read directly from Zustand store
+  const { sentiment, emotionIntensity, energyLevel } = useVisualizationStore();
+  
+  // Determine sentiment label from sentiment value
+  const getSentimentLabel = (sentimentValue) => {
+    if (sentimentValue >= 0.6) return 'joyful';
+    if (sentimentValue >= 0.2) return 'calm';
+    if (sentimentValue >= -0.2) return 'neutral';
+    if (sentimentValue >= -0.6) return 'sad';
+    return 'angry';
+  };
+  
+  const sentimentLabel = getSentimentLabel(sentiment);
   const flowFieldRef = useRef(null);
   const flowParticlesRef = useRef([]);
   const orbitParticlesRef = useRef([]);
