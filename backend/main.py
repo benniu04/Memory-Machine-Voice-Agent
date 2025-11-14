@@ -68,7 +68,16 @@ async def process_text(input_data: TextInput):
         # Construct the prompt for the AI model
         system_prompt = """You are an expert sentiment analyzer. Analyze the given text and return a JSON object with:
 - sentiment: a float from -1.0 (very negative) to 1.0 (very positive)
-- sentiment_label: a single descriptive word for the emotion (e.g., "joyful", "anxious", "calm", "excited", "melancholic", "angry", "peaceful")
+- sentiment_label: MUST be exactly one of these words (no variations):
+  * "joyful" - for happiness, excitement, delight
+  * "calm" - for peace, serenity, relaxation
+  * "loving" - for affection, warmth, care
+  * "melancholic" - for sadness, depression, sorrow (LOW energy)
+  * "angry" - for rage, frustration, irritation (HIGH energy)
+  * "anxious" - for nervousness, worry, tension
+  * "surprised" - for shock, amazement
+  * "neutral" - for no strong emotion
+  IMPORTANT: Use exactly these words, no synonyms or variations
 - keywords: an array of 3-5 key words or short phrases from the text
 - emotion_intensity: a float from 0.0 (very subdued) to 1.0 (very intense)
 - energy_level: a float from 0.0 (very calm/low energy) to 1.0 (very energetic/high energy)
@@ -89,6 +98,32 @@ Be nuanced in your analysis. Return ONLY the JSON object, no other text."""
         
         # Parse the response
         result = json.loads(response.choices[0].message.content)
+        
+        # Validate and normalize sentiment_label
+        valid_labels = ["joyful", "calm", "loving", "melancholic", "angry", "anxious", "surprised", "neutral"]
+        label = result.get("sentiment_label", "").lower().strip()
+        
+        # Only use fallback if label is completely invalid or missing
+        if not label or label not in valid_labels:
+            # Fallback: map sentiment value to appropriate label
+            sentiment_value = result.get("sentiment", 0)
+            energy = result.get("energy_level", 0.5)
+            
+            if sentiment_value >= 0.4:
+                result["sentiment_label"] = "joyful" if energy > 0.6 else "calm"
+            elif sentiment_value >= 0.1:
+                result["sentiment_label"] = "calm"
+            elif sentiment_value >= -0.1:
+                result["sentiment_label"] = "neutral"
+            elif sentiment_value >= -0.3:
+                result["sentiment_label"] = "melancholic"
+            else:
+                # Very negative - distinguish between sad and angry based on energy
+                # High energy negative = angry, Low energy negative = melancholic
+                result["sentiment_label"] = "angry" if energy > 0.7 else "melancholic"
+        else:
+            # Keep the AI's chosen label if it's valid
+            result["sentiment_label"] = label
         
         # Validate and return
         return SentimentResponse(**result)

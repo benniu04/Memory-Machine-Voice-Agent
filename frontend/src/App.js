@@ -101,7 +101,8 @@ function App() {
             updateVisualization(
               sentimentData.energy_level,
               sentimentData.emotion_intensity,
-              sentimentData.sentiment
+              sentimentData.sentiment,
+              sentimentData.sentiment_label
             );
             setSentimentLabel(sentimentData.sentiment_label);
             setStoreKeywords(sentimentData.keywords);
@@ -135,7 +136,7 @@ function App() {
       clearKeywords();
       currentTranscriptRef.current = '';
       transcriptArrayRef.current = [];
-      updateVisualization(0.5, 0.5, 0);
+      updateVisualization(0.5, 0.5, 0, 'neutral');
       setSentimentLabel('neutral');
       
       // Clear any pending processing
@@ -185,7 +186,8 @@ function App() {
         updateVisualization(
           sentimentData.energy_level,
           sentimentData.emotion_intensity,
-          sentimentData.sentiment
+          sentimentData.sentiment,
+          sentimentData.sentiment_label
         );
         setSentimentLabel(sentimentData.sentiment_label);
         setStoreKeywords(sentimentData.keywords);

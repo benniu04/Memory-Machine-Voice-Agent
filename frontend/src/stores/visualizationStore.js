@@ -12,14 +12,16 @@ export const useVisualizationStore = create(
       energyLevel: 0.5,
       emotionIntensity: 0.5,
       sentiment: 0,
+      sentimentLabel: 'neutral',
       keywords: [],
 
       // Actions
-      updateVisualization: (energy, emotion, sentiment) => {
+      updateVisualization: (energy, emotion, sentiment, label) => {
         set({
           energyLevel: energy,
           emotionIntensity: emotion,
-          sentiment: sentiment
+          sentiment: sentiment,
+          sentimentLabel: label || 'neutral'
         });
       },
 
@@ -33,6 +35,10 @@ export const useVisualizationStore = create(
 
       setSentiment: (sentiment) => {
         set({ sentiment });
+      },
+
+      setSentimentLabel: (sentimentLabel) => {
+        set({ sentimentLabel });
       },
 
       setKeywords: (keywords) => {
@@ -55,6 +61,7 @@ export const useVisualizationStore = create(
           energyLevel: 0.5,
           emotionIntensity: 0.5,
           sentiment: 0,
+          sentimentLabel: 'neutral',
           keywords: []
         });
       }

@@ -3,19 +3,8 @@ import Sketch from 'react-p5';
 import { useVisualizationStore } from '../stores';
 
 const PerlinVisualization = () => {
-  // Read directly from Zustand store
-  const { sentiment, emotionIntensity, energyLevel } = useVisualizationStore();
-  
-  // Determine sentiment label from sentiment value
-  const getSentimentLabel = (sentimentValue) => {
-    if (sentimentValue >= 0.6) return 'joyful';
-    if (sentimentValue >= 0.2) return 'calm';
-    if (sentimentValue >= -0.2) return 'neutral';
-    if (sentimentValue >= -0.6) return 'sad';
-    return 'angry';
-  };
-  
-  const sentimentLabel = getSentimentLabel(sentiment);
+  // Read directly from Zustand store (including sentimentLabel from backend)
+  const { sentiment, emotionIntensity, energyLevel, sentimentLabel } = useVisualizationStore();
   const flowFieldRef = useRef(null);
   const flowParticlesRef = useRef([]);
   const orbitParticlesRef = useRef([]);
@@ -29,58 +18,72 @@ const PerlinVisualization = () => {
 
   const getSentimentColor = (sentiment, label, intensity) => {
     let hue, hue2, hue3, saturation, brightness;
+    const normalizedLabel = label.toLowerCase().trim();
 
-    switch (label.toLowerCase()) {
-      case 'joyful':
-      case 'happy':
-      case 'excited':
+    // More robust label matching with sentiment-based fallback
+    if (normalizedLabel.includes('joy') || normalizedLabel.includes('happy') || normalizedLabel.includes('excit')) {
+      // JOYFUL - Yellow/Orange
+      hue = 45; hue2 = 25; hue3 = 60;
+      saturation = 85 + intensity * 15;
+      brightness = 85 + intensity * 15;
+    } else if (normalizedLabel.includes('calm') || normalizedLabel.includes('peace') || normalizedLabel.includes('seren') || normalizedLabel.includes('relax')) {
+      // CALM - Cyan/Light Blue
+      hue = 190; hue2 = 210; hue3 = 170;
+      saturation = 70 + intensity * 20;
+      brightness = 75 + intensity * 20;
+    } else if (normalizedLabel.includes('anxi') || normalizedLabel.includes('nerv') || normalizedLabel.includes('tens') || normalizedLabel.includes('worr')) {
+      // ANXIOUS - Purple
+      hue = 280; hue2 = 300; hue3 = 260;
+      saturation = 75 + intensity * 25;
+      brightness = 70 + intensity * 25;
+    } else if (normalizedLabel.includes('ang') || normalizedLabel.includes('frust') || normalizedLabel.includes('rage')) {
+      // ANGRY - Red
+      hue = 0; hue2 = 10; hue3 = 350;
+      saturation = 95 + intensity * 5;
+      brightness = 80 + intensity * 15;
+    } else if (normalizedLabel.includes('sad') || normalizedLabel.includes('melanch') || normalizedLabel.includes('depress') || normalizedLabel.includes('gloo')) {
+      // SAD/MELANCHOLIC - Deep Blue
+      hue = 230; hue2 = 250; hue3 = 210;
+      saturation = 60 + intensity * 20;
+      brightness = 55 + intensity * 25;
+    } else if (normalizedLabel.includes('surpris') || normalizedLabel.includes('amaz') || normalizedLabel.includes('shock')) {
+      // SURPRISED - Teal
+      hue = 160; hue2 = 180; hue3 = 280;
+      saturation = 80 + intensity * 20;
+      brightness = 80 + intensity * 20;
+    } else if (normalizedLabel.includes('lov') || normalizedLabel.includes('affect') || normalizedLabel.includes('tender')) {
+      // LOVING - Pink
+      hue = 330; hue2 = 310; hue3 = 350;
+      saturation = 75 + intensity * 25;
+      brightness = 80 + intensity * 20;
+    } else {
+      // FALLBACK: Use sentiment value to determine color
+      if (sentiment >= 0.4) {
+        // Positive - Yellow/Orange (joyful)
         hue = 45; hue2 = 25; hue3 = 60;
-        saturation = 85 + intensity * 15;
-        brightness = 85 + intensity * 15;
-        break;
-      case 'calm':
-      case 'peaceful':
-      case 'serene':
-        hue = 190; hue2 = 210; hue3 = 170;
         saturation = 70 + intensity * 20;
+        brightness = 80 + intensity * 15;
+      } else if (sentiment >= 0.1) {
+        // Slightly positive - Cyan (calm)
+        hue = 190; hue2 = 210; hue3 = 170;
+        saturation = 65 + intensity * 20;
         brightness = 75 + intensity * 20;
-        break;
-      case 'anxious':
-      case 'nervous':
-      case 'tense':
-        hue = 280; hue2 = 300; hue3 = 260;
-        saturation = 75 + intensity * 25;
+      } else if (sentiment >= -0.1) {
+        // Neutral - Blue-Purple
+        hue = 200; hue2 = 220; hue3 = 260;
+        saturation = 60 + intensity * 25;
         brightness = 70 + intensity * 25;
-        break;
-      case 'angry':
-      case 'frustrated':
-        hue = 0; hue2 = 15; hue3 = 345;
+      } else if (sentiment >= -0.4) {
+        // Slightly negative - Deep Blue (sad)
+        hue = 230; hue2 = 250; hue3 = 210;
+        saturation = 60 + intensity * 20;
+        brightness = 55 + intensity * 25;
+      } else {
+        // Very negative - Red (angry)
+        hue = 0; hue2 = 10; hue3 = 350;
         saturation = 90 + intensity * 10;
         brightness = 75 + intensity * 20;
-        break;
-      case 'sad':
-      case 'melancholic':
-      case 'depressed':
-        hue = 220; hue2 = 240; hue3 = 200;
-        saturation = 55 + intensity * 25;
-        brightness = 50 + intensity * 30;
-        break;
-      case 'surprised':
-      case 'amazed':
-        hue = 160; hue2 = 180; hue3 = 280;
-        saturation = 80 + intensity * 20;
-        brightness = 80 + intensity * 20;
-        break;
-      case 'loving':
-      case 'affectionate':
-        hue = 330; hue2 = 310; hue3 = 350;
-        saturation = 75 + intensity * 25;
-        brightness = 80 + intensity * 20;
-        break;
-      default:
-        hue = 200; hue2 = 280; hue3 = 320;
-        saturation = 70 + intensity * 25;
-        brightness = 75 + intensity * 25;
+      }
     }
 
     return { h: hue, h2: hue2, h3: hue3, s: saturation, b: brightness };
@@ -121,6 +124,18 @@ const PerlinVisualization = () => {
 
     // Color transitions
     const colors = getSentimentColor(sentiment, sentimentLabel, emotionIntensity);
+    
+    // Debug logging (remove in production)
+    if (process.env.NODE_ENV === 'development' && Math.random() < 0.01) {
+      console.log('Color Debug:', {
+        sentiment,
+        sentimentLabel,
+        emotionIntensity,
+        targetHue: colors.h,
+        currentHue: currentColorRef.current.h
+      });
+    }
+    
     targetColorRef.current = colors;
 
     currentColorRef.current.h += (targetColorRef.current.h - currentColorRef.current.h) * 0.04;

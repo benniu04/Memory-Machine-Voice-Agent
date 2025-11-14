@@ -16,19 +16,25 @@ const KeywordsDisplay = ({ sentimentLabel }) => {
         timestamp: Date.now()
       }));
 
-      // Add new keywords with staggered delay
-      newKeywords.forEach((keyword, index) => {
-        setTimeout(() => {
-          setDisplayedKeywords(prev => {
-            // Keep only recent keywords (last 15)
-            const updated = [...prev, keyword];
-            return updated.slice(-15);
-          });
-        }, index * 150); // Stagger by 150ms
+      // Check for duplicates before adding
+      setDisplayedKeywords(prev => {
+        const existingTexts = new Set(prev.map(k => k.text.toLowerCase()));
+        
+        // Filter out keywords that already exist
+        const uniqueNewKeywords = newKeywords.filter(
+          keyword => !existingTexts.has(keyword.text.toLowerCase())
+        );
+        
+        if (uniqueNewKeywords.length === 0) return prev;
+        
+        // Add only unique keywords and keep last 15
+        const updated = [...prev, ...uniqueNewKeywords];
+        return updated.slice(-15);
       });
     } else if (keywords && keywords.length === 0) {
       // Clear displayed keywords when parent resets
       setDisplayedKeywords([]);
+      keywordIdsRef.current = 0; // Reset ID counter
     }
   }, [keywords]);
 
