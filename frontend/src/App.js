@@ -252,13 +252,13 @@ function App() {
             
             {/* Subtitle with gradient and animation */}
             <p 
-              className="text-xl mt-8 mb-12 font-light tracking-wide bg-gradient-to-r from-blue-200/80 via-purple-200/80 to-pink-200/80 bg-clip-text text-transparent"
+              className="text-xl max-md:text-lg max-sm:text-base mt-8 mb-12 font-light tracking-wide bg-gradient-to-r from-blue-200/80 via-purple-200/80 to-pink-200/80 bg-clip-text text-transparent"
               style={{ 
                 animation: 'fade-in 1s ease-in forwards',
                 filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))'
               }}
             >
-              Click start when you're ready
+              Click start when you're ready and make sure you're in a quiet environment.
             </p>
             
             {/* Button with pulse effect */}
