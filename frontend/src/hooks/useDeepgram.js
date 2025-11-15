@@ -54,7 +54,7 @@ const useDeepgram = (apiKey) => {
       let connection;
       try {
         connection = deepgramRef.current.listen.live({
-          model: 'nova-2',
+          model: 'nova-2-general',
           language: 'en-US',
           smart_format: true,
           interim_results: true,

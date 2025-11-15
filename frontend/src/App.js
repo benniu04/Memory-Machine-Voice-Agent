@@ -209,11 +209,14 @@ function App() {
       }
     }
     
-    // Clear keywords after stopping recording (clean slate for next session)
+    // Clear keywords and transcript after stopping recording (clean slate for next session)
     setTimeout(() => {
       clearKeywords();
+      clearTranscript();
+      updateVisualization(0.5, 0.5, 0, 'neutral');
+      setSentimentLabel('neutral');
     }, 100);
-  }, [stopRecording, setRecording, setProcessing, updateVisualization, setStoreKeywords, clearKeywords]);
+  }, [stopRecording, setRecording, setProcessing, updateVisualization, setStoreKeywords, clearKeywords, clearTranscript]);
 
   return (
     <div className="App">
