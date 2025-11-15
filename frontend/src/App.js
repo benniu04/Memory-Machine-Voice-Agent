@@ -62,7 +62,7 @@ function App() {
 
   // Handle transcript updates from Deepgram
   const handleTranscript = useCallback(async (data) => {
-    const { text, isFinal, speech_final } = data;
+    const { text, isFinal } = data;
 
     if (isFinal) {
       // Add finalized transcript to store
@@ -78,46 +78,46 @@ function App() {
         currentTranscriptRef.current = text;
       }
 
-      // Process sentiment when speech is final
-      if (speech_final) {
-        // Clear any pending processing
-        if (processingTimeoutRef.current) {
-          clearTimeout(processingTimeoutRef.current);
-        }
-
-        // Debounce processing to avoid too many API calls
-        processingTimeoutRef.current = setTimeout(async () => {
-          const textToProcess = currentTranscriptRef.current;
-          if (!textToProcess || textToProcess.trim().length === 0) {
-            return;
-          }
-          
-          try {
-            setProcessing(true);
-
-            const sentimentData = await processSentiment(textToProcess);
-            
-            // Update visualization store
-            updateVisualization(
-              sentimentData.energy_level,
-              sentimentData.emotion_intensity,
-              sentimentData.sentiment,
-              sentimentData.sentiment_label
-            );
-            setSentimentLabel(sentimentData.sentiment_label);
-            setStoreKeywords(sentimentData.keywords);
-            
-            // Clear the processed transcript
-            currentTranscriptRef.current = '';
-          } catch (err) {
-            console.error('Error processing sentiment:', err);
-          } finally {
-            setProcessing(false);
-          }
-        }, 500); // Wait 500ms after speech ends
+      // Process sentiment for every final transcript (real-time processing)
+      // Clear any pending processing
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
       }
+
+      // Debounce processing to avoid too many API calls (process after 1 second of no new transcripts)
+      processingTimeoutRef.current = setTimeout(async () => {
+        const textToProcess = currentTranscriptRef.current;
+        if (!textToProcess || textToProcess.trim().length === 0) {
+          return;
+        }
+        
+        try {
+          setProcessing(true);
+          // Clear old keywords before processing new content
+          clearKeywords();
+
+          const sentimentData = await processSentiment(textToProcess);
+          
+          // Update visualization store
+          updateVisualization(
+            sentimentData.energy_level,
+            sentimentData.emotion_intensity,
+            sentimentData.sentiment,
+            sentimentData.sentiment_label
+          );
+          setSentimentLabel(sentimentData.sentiment_label);
+          setStoreKeywords(sentimentData.keywords);
+          
+          // Clear the processed transcript
+          currentTranscriptRef.current = '';
+        } catch (err) {
+          console.error('Error processing sentiment:', err);
+        } finally {
+        setProcessing(false);
+      }
+    }, 1000); // Wait 1 second after last transcript to batch process
     }
-  }, [addTranscript, setProcessing, updateVisualization, setStoreKeywords]);
+  }, [addTranscript, setProcessing, updateVisualization, setStoreKeywords, clearKeywords]);
 
   // Start recording handler
   const handleStart = useCallback(async () => {
@@ -179,6 +179,8 @@ function App() {
       
       try {
         setProcessing(true);
+        // Clear old keywords before processing new content
+        clearKeywords();
 
         const sentimentData = await processSentiment(textToProcess);
         
@@ -206,7 +208,12 @@ function App() {
         processingTimeoutRef.current = null;
       }
     }
-  }, [stopRecording, setRecording, setProcessing, updateVisualization, setStoreKeywords]);
+    
+    // Clear keywords after stopping recording (clean slate for next session)
+    setTimeout(() => {
+      clearKeywords();
+    }, 100);
+  }, [stopRecording, setRecording, setProcessing, updateVisualization, setStoreKeywords, clearKeywords]);
 
   return (
     <div className="App">
